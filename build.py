@@ -117,7 +117,7 @@ with open('build/opencc/phrase.txt', 'w') as filterPhrase:
 
 for name in ('c_42.schema', 'c_42a.schema', 'symbols_for_c'):
     shutil.copyfile('config/%s.yaml' % name, 'build/%s.yaml' % name)
-for name in ('brevity', 'brevity2', 'division', 'emoji'):
+for name in ('brevity', 'brevity2', 'division', 'emoji', 'phrase'):
     shutil.copyfile('config/%s.json' % name, 'build/opencc/%s.json' % name)
 for name in ('emoji_category', 'emoji_word'):
     shutil.copyfile('config/%s.txt' % name, 'build/opencc/%s.txt' % name)
