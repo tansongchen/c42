@@ -14,6 +14,7 @@ schema:
     - c_42a
     - pinyin_simp
     - stroke
+    - kana
 
 switches:
   - name: ascii_mode
@@ -59,8 +60,6 @@ engine:
     - abc_segmentor
     - affix_segmentor@assist
     - affix_segmentor@reverse_lookup
-    - affix_segmentor@pinyin_lookup
-    - affix_segmentor@bihua_lookup
     - punct_segmentor
     - fallback_segmentor
   translators:
@@ -68,8 +67,9 @@ engine:
     - reverse_lookup_translator
     - table_translator
     - script_translator@assist
-    - script_translator@pinyin_lookup
+    - script_translator@kana
     - script_translator@bihua_lookup
+    - script_translator@pinyin_lookup
   filters:
     - simplifier@brevity_code_suggestion
     - simplifier@emoji_suggestion
@@ -155,17 +155,25 @@ assist:
   dictionary: c_42a
   enable_user_dict: false
 
+kana:
+  tag: kana
+  dictionary: kana
+  enable_user_dict: false
+  initial_quality: 1000
+
 pinyin_lookup:
   tag: pinyin_lookup
   dictionary: pinyin_simp
   enable_user_dict: false
   tips: "〔拼音〕"
+  initial_quality: 1
 
 bihua_lookup:
   tag: bihua_lookup
   dictionary: stroke
   enable_user_dict: false
   tips: "〔笔画〕"
+  initial_quality: 100
 
 # 反查
 reverse_lookup: 
@@ -174,6 +182,7 @@ reverse_lookup:
   suffix: ";"
   tips: "【反查】"
   extra_tags:
+    - kana
     - pinyin_lookup
     - bihua_lookup
 
@@ -199,6 +208,8 @@ bihua_reverse_lookup:
 # 标点
 punctuator:
   import_preset: symbols_for_c
+  full_shape:
+    '`': ['⌘', '⇧', '⌥', '⌃', '↩︎', '⇥', '␣', '⌫']
   half_shape:
     ",": { commit: "，" }
     ".": { commit: "的" }
@@ -208,11 +219,11 @@ punctuator:
     '?' : { commit: ？ }
     ';' : { commit: ； }
     ':' : { commit: ： }
-    '''' : { pair: [ '「', '」' ] }
-    '"' : { pair: [ '『', '』' ] }
+    '''' : { pair: [「, 」] }
+    '"' : { pair: [『, 』] }
     '\' : { commit: 、 }
     '|' : { commit: ｜ }
-    '`' : ["·", "｜", "§", "¦"]
+    '`' : ['　', "·", "／", ]
     '~' : [ '~', ～ ]
     '!' : { commit: ！ }
     '^' : { commit: …… }
@@ -222,16 +233,14 @@ punctuator:
     '_' : ——
     '+' : '+'
     '=' : '='
-    '[' : { commit: 【 }
-    ']' : { commit: 】 }
-    '{' : { commit: ｛ }
-    '}' : { commit: ｝ }
+    '{' : [【, ｛]
+    '}' : [】, ｝]
 
 # 杂项
 recognizer:
   patterns:
     assist: "^[a-z;]{3}$"
-    reverse_lookup: "^`[a-z]*'?$"
+    reverse_lookup: "^`[a-zA-Z]*'?$"
     punct: "^~([0-9]0?|[A-Za-z]+)$"
 
 key_binder:
