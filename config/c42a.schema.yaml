@@ -1,9 +1,6 @@
-# Rime schema settings
-# encoding: utf-8
-
 schema:
-  schema_id: c_42a
-  name: "C四二辅码"
+  schema_id: c42a
+  name: "C 输入 · 辅码"
   version: "1"
   author:
     - Cicin
@@ -51,7 +48,7 @@ speller:
     - xform/~//
 
 translator:
-  dictionary: c_42a
+  dictionary: c42a
   enable_user_dict: false
   enable_encoder: false
   enable_commit_history: false

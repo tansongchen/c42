@@ -1,8 +1,5 @@
-# Rime dictionary: c_42
-# encoding: utf-8
-
 ---
-name: c_42
+name: c42
 version: "1"
 sort: original
 columns:

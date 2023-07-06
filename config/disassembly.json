@@ -1,10 +1,10 @@
 {
-  "name": "Chinese to Emoji",
+  "name": "Suggest Roots",
   "segmentation": {
     "type": "mmseg",
     "dict": {
       "type": "text",
-      "file": "emoji_word.txt"
+      "file": "disassembly.txt"
     }
   },
   "conversion_chain": [{
@@ -12,10 +12,7 @@
       "type": "group",
       "dicts": [{
         "type": "text",
-        "file": "emoji_word.txt"
-      }, {
-        "type": "text",
-        "file": "emoji_category.txt"
+        "file": "disassembly.txt"
       }]
     }
   }]

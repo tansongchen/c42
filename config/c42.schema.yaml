@@ -1,0 +1,225 @@
+schema:
+  schema_id: c42
+  name: "C 输入 · 四二顶"
+  version: "2.4"
+  author:
+    - Cicin（15.02.05版）
+    - 蓝落萧改编
+  description: |
+    改编自 Cicin 所作的 C 输入，取前 3 码为全码，4 码顶 2 码上屏
+  dependencies:
+    - c42a
+    - pinyin_simp
+    - stroke
+
+switches:
+  - name: ascii_mode
+    reset: 0
+    states: [中, 西]
+  - name: full_shape
+    states: [半, 全]
+  - name: traditional_characters
+    states: [简, 繁]
+  - name: ascii_punct
+    states: [。, ．]
+  - name: phrase_prediction
+    states: [无, 联]
+  - name: char_suggestion
+    states: [无, 字]
+  - name: word_suggestion
+    states: [无, 词]
+  - name: disassembly_suggestion
+    states: [无, 拆]
+
+menu:
+  page_size: 6
+
+engine:
+  processors:
+    - ascii_composer
+    - recognizer
+    - lua_processor@phrase_edit_processor@phrase_edit
+    - key_binder
+    - speller
+    - punctuator
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - affix_segmentor@assist
+    - affix_segmentor@reverse_lookup
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - punct_translator
+    - reverse_lookup_translator
+    - table_translator
+    - script_translator@assist
+    - script_translator@bihua_lookup
+    - script_translator@pinyin_lookup
+    - lua_translator@history_translator@history
+  filters:
+    - lua_filter@phrase_filter
+    - simplifier@traditional_characters
+    - simplifier@char_suggestion
+    - simplifier@word_suggestion
+    - simplifier@disassembly_suggestion
+    - reverse_lookup_filter@pinyin_reverse_lookup
+    - reverse_lookup_filter@bihua_reverse_lookup
+
+# processors
+
+speller:
+  alphabet: "qwertasdfgzxcvbyuiophjkl;nm,./"
+  initials: "qwertasdfgzxcvbyuiophjkl;nm"
+  auto_select: true
+
+punctuator:
+  import_preset: symbols_for_c
+  half_shape:
+    ",": { commit: "，" }
+    ".": { commit: "的" }
+    "/": { commit: "。" }
+    "<": { commit: "《" }
+    ">": { commit: "》" }
+    "?": { commit: ？ }
+    ";": { commit: ； }
+    ":": { commit: ： }
+    "'": { pair: [「, 」] }
+    '"': { pair: [『, 』] }
+    '\': { commit: 、 }
+    "|": { commit: ｜ }
+    "`": ["　", "·", "／"]
+    "~": ["~", ～]
+    "!": { commit: ！ }
+    "^": { commit: …… }
+    "(": （
+    ")": ）
+    "-": "-"
+    "_": ——
+    "+": "+"
+    "=": "="
+    "{": [【, ｛]
+    "}": [】, ｝]
+
+recognizer:
+  patterns:
+    assist: "^[a-z;]{3}$"
+    reverse_lookup: "^`[a-zA-Z]*'?$"
+    punct: "^~([0-9]0?|[A-Za-z]+)$"
+
+key_binder:
+  import_preset: default
+  bindings:
+    - { when: has_menu, accept: Tab, send: Page_Down }
+    - { when: has_menu, accept: period, send: period }
+    - { when: has_menu, accept: comma, send: comma }
+    - { when: has_menu, accept: 0, send: 2 }
+    - { when: has_menu, accept: 9, send: 3 }
+    - { when: has_menu, accept: 8, send: 4 }
+    - { when: has_menu, accept: 7, send: 5 }
+
+# translators
+
+translator:
+  dictionary: c42
+  enable_charset_filter: false
+  enable_sentence: false
+  enable_encoder: false
+  encode_commit_history: false
+  enable_user_dict: false
+  enable_completion: false
+
+reverse_lookup:
+  tag: reverse_lookup
+  prefix: "`"
+  suffix: ";"
+  tips: "【反查】"
+  extra_tags:
+    - kana
+    - pinyin_lookup
+    - bihua_lookup
+
+assist:
+  tag: assist
+  dictionary: c42a
+  enable_user_dict: false
+
+pinyin_lookup:
+  tag: pinyin_lookup
+  dictionary: pinyin_simp
+  enable_user_dict: false
+  tips: "〔拼音〕"
+  initial_quality: 1
+
+bihua_lookup:
+  tag: bihua_lookup
+  dictionary: stroke
+  enable_user_dict: false
+  tips: "〔笔画〕"
+  initial_quality: 100
+
+# filters
+
+traditional_characters:
+  option_name: traditional_characters
+  opencc_config: s2t.json
+  tags:
+    - abc
+
+char_suggestion:
+  option_name: char_suggestion
+  opencc_config: char.json
+  tips: all
+  show_in_comment: true
+  comment_format:
+    - xform/^(?!~)/二简〔/
+    - xform/^~~/无理〔/
+    - xform/^~/重码〔/
+    - xform/$/〕/
+  tags:
+    - assist
+
+word_suggestion:
+  option_name: word_suggestion
+  opencc_config: word.json
+  tips: all
+  show_in_comment: true
+  comment_format:
+    - xform/^/简词〔/
+    - xform/$/〕/
+  tags:
+    - abc
+
+disassembly_suggestion:
+  option_name: disassembly_suggestion
+  opencc_config: disassembly.json
+  tips: all
+  show_in_comment: true
+  comment_format:
+    - xform/^/〔/
+    - xform/$/〕/
+
+pinyin_reverse_lookup:
+  dictionary: c42a
+  enable_user_dict: false
+  overwrite_comment: true
+  comment_format:
+    - "xform/$/〕/"
+    - "xform/^/〔/"
+  tags:
+    - pinyin_lookup
+
+bihua_reverse_lookup:
+  dictionary: c42a
+  enable_user_dict: false
+  overwrite_comment: true
+  comment_format:
+    - "xform/$/〕/"
+    - "xform/^/〔/"
+    - "xform/~//"
+  tags:
+    - bihua_lookup

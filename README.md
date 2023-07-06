@@ -13,7 +13,7 @@ C 输入（下简称 C）是百度贴吧用户 @dsscicin 于 2015 年发布的�
    - Windows：`C:/Users/(用户名)/Appdata/Roaming/Rime/`；
    - macOS：`/Users/(用户名)/Library/Rime/`；
    - Linux：`~/.config/ibus/rime/`（ibus 框架）或 `~/.config/fcitx/rime/`（fcitx 框架）；
-3. 在 `default.custom.yaml` 或 `default.yaml` 中添加方案 `c_42`；
+3. 在 `default.custom.yaml` 或 `default.yaml` 中添加方案 `c42`；
 4. 重新部署。
 
 在 `c42.zip` 中还有 `learn` 文件夹，其中包含：
