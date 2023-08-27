@@ -14,21 +14,19 @@ schema:
 
 switches:
   - name: ascii_mode
-    reset: 0
     states: [中, 西]
   - name: full_shape
     states: [半, 全]
-  - name: traditional_characters
+  - name: traditional_char
     states: [简, 繁]
-  - name: ascii_punct
-    states: [。, ．]
-  - name: phrase_prediction
+  - name: phrase
     states: [无, 联]
+    reset: 1
   - name: char_suggestion
     states: [无, 字]
   - name: word_suggestion
     states: [无, 词]
-  - name: disassembly_suggestion
+  - name: disassembly
     states: [无, 拆]
 
 menu:
@@ -36,9 +34,9 @@ menu:
 
 engine:
   processors:
+    - lua_processor@phrase_edit
     - ascii_composer
     - recognizer
-    - lua_processor@phrase_edit_processor@phrase_edit
     - key_binder
     - speller
     - punctuator
@@ -49,26 +47,26 @@ engine:
     - ascii_segmentor
     - matcher
     - abc_segmentor
-    - affix_segmentor@assist
-    - affix_segmentor@reverse_lookup
+    - affix_segmentor@full
+    - affix_segmentor@short
+    - affix_segmentor@extra
     - punct_segmentor
     - fallback_segmentor
   translators:
     - punct_translator
-    - reverse_lookup_translator
     - table_translator
-    - script_translator@assist
-    - script_translator@bihua_lookup
-    - script_translator@pinyin_lookup
-    - lua_translator@history_translator@history
+    - script_translator@full
+    - script_translator@stroke
+    - script_translator@pinyin_simp
+    - lua_translator@history
   filters:
-    - lua_filter@phrase_filter
-    - simplifier@traditional_characters
     - simplifier@char_suggestion
+    - simplifier@disassembly
+    - lua_filter@phrase
+    # - simplifier@phrase
+    - simplifier@traditional_char
     - simplifier@word_suggestion
-    - simplifier@disassembly_suggestion
-    - reverse_lookup_filter@pinyin_reverse_lookup
-    - reverse_lookup_filter@bihua_reverse_lookup
+    - reverse_lookup_filter@reverse_lookup
 
 # processors
 
@@ -81,20 +79,25 @@ punctuator:
   import_preset: symbols_for_c
   half_shape:
     ",": { commit: "，" }
-    ".": { commit: "的" }
-    "/": { commit: "。" }
     "<": { commit: "《" }
+    ".": { commit: "的" }
     ">": { commit: "》" }
+    "/": { commit: "。" }
     "?": { commit: ？ }
-    ";": { commit: ； }
+    ";": [；, ／]
     ":": { commit: ： }
     "'": { pair: [「, 」] }
     '"': { pair: [『, 』] }
+    "[": { commit: ［ }
+    "]": { commit: ］ }
+    "{": { commit: 【 }
+    "}": { commit: 】 }
     '\': { commit: 、 }
     "|": { commit: ｜ }
-    "`": ["　", "·", "／"]
-    "~": ["~", ～]
+    "`": [·, "　"]
+    "~": { commit: ～ }
     "!": { commit: ！ }
+    "$": { commit: ￥ }
     "^": { commit: …… }
     "(": （
     ")": ）
@@ -102,25 +105,73 @@ punctuator:
     "_": ——
     "+": "+"
     "=": "="
-    "{": [【, ｛]
-    "}": [】, ｝]
+  full_shape:
+    "`": "｀"
+    "~": "～"
+    "!": { commit: "！" }
+    "@": ["＠", "☯"]
+    "#": ["＃", "⌘"]
+    "$": ["￥", "$", "€", "£", "¥", "¢", "¤"]
+    "%": ["％", "°", "℃"]
+    "^": { commit: "……" }
+    "&": "＆"
+    "*": ["＊", "·", "・", "×", "※", "❂"]
+    "(": "（"
+    ")": "）"
+    "-": "－"
+    _: "——"
+    "=": "＝"
+    "+": "＋"
+    "[": ["「", "【", "〔", "［"]
+    "{": ["『", "〖", "｛"]
+    "]": ["」", "】", "〕", "］"]
+    "}": ["』", "〗", "｝"]
+    "\\": ["、", "＼"]
+    "|": ["·", "｜", "§", "¦"]
+    ";": { commit: "；" }
+    ":": { commit: "：" }
+    "'": { pair: ["‘", "’"] }
+    '"': { pair: ["“", "”"] }
+    ",": { commit: "，" }
+    "<": ["《", "〈", "«", "‹"]
+    .: { commit: "。" }
+    ">": ["》", "〉", "»", "›"]
+    "/": ["／", "÷"]
+    "?": { commit: "？" }
+    " ": { commit: "　" }
 
 recognizer:
   patterns:
-    assist: "^[a-z;]{3}$"
-    reverse_lookup: "^`[a-zA-Z]*'?$"
-    punct: "^~([0-9]0?|[A-Za-z]+)$"
+    full: "^[a-z;]{3}$"
+    short: "^[a-z;][a-z;,./]$"
+    extra: "^``[a-z]*$"
+    punct: "^`([0-9]0?|[A-Za-z]*)$"
 
 key_binder:
   import_preset: default
   bindings:
-    - { when: has_menu, accept: Tab, send: Page_Down }
     - { when: has_menu, accept: period, send: period }
     - { when: has_menu, accept: comma, send: comma }
-    - { when: has_menu, accept: 0, send: 2 }
-    - { when: has_menu, accept: 9, send: 3 }
-    - { when: has_menu, accept: 8, send: 4 }
-    - { when: has_menu, accept: 7, send: 5 }
+    - { when: has_menu, accept: minus, send: minus }
+    - { when: has_menu, accept: equal, send: equal }
+    - { when: has_menu, accept: Tab, send: Page_Down }
+    - { when: paging, accept: "Shift+Tab", send: Page_Up }
+    - { accept: "Control+Shift+4", toggle: traditional_char, when: always }
+    - { accept: "Control+Shift+5", toggle: phrase, when: always }
+    - { accept: "Control+Shift+6", toggle: char_suggestion, when: always }
+    - { accept: "Control+Shift+7", toggle: word_suggestion, when: always }
+    - { accept: "Control+Shift+8", toggle: disassembly, when: always }
+    # - { when: has_menu, accept: 0, send: 2 }
+    # - { when: has_menu, accept: 9, send: 3 }
+    # - { when: has_menu, accept: 8, send: 4 }
+    # - { when: has_menu, accept: 7, send: 5 }
+
+# segmentors
+
+extra:
+  tag: extra
+  prefix: "``"
+  tips: "〔反查〕"
 
 # translators
 
@@ -133,42 +184,34 @@ translator:
   enable_user_dict: false
   enable_completion: false
 
-reverse_lookup:
-  tag: reverse_lookup
-  prefix: "`"
-  suffix: ";"
-  tips: "【反查】"
-  extra_tags:
-    - kana
-    - pinyin_lookup
-    - bihua_lookup
-
-assist:
-  tag: assist
+full:
+  tag: full
   dictionary: c42a
   enable_user_dict: false
 
-pinyin_lookup:
-  tag: pinyin_lookup
+pinyin_simp:
+  tag: extra
   dictionary: pinyin_simp
   enable_user_dict: false
-  tips: "〔拼音〕"
   initial_quality: 1
 
-bihua_lookup:
-  tag: bihua_lookup
+stroke:
+  tag: extra
   dictionary: stroke
   enable_user_dict: false
-  tips: "〔笔画〕"
   initial_quality: 100
 
 # filters
 
-traditional_characters:
-  option_name: traditional_characters
+traditional_char:
+  option_name: traditional_char
   opencc_config: s2t.json
-  tags:
-    - abc
+  tags: [abc]
+
+phrase:
+  option_name: phrase
+  # opencc_config: legacyphrase.json
+  tags: [full, short]
 
 char_suggestion:
   option_name: char_suggestion
@@ -180,8 +223,7 @@ char_suggestion:
     - xform/^~~/无理〔/
     - xform/^~/重码〔/
     - xform/$/〕/
-  tags:
-    - assist
+  tags: [full]
 
 word_suggestion:
   option_name: word_suggestion
@@ -191,35 +233,24 @@ word_suggestion:
   comment_format:
     - xform/^/简词〔/
     - xform/$/〕/
-  tags:
-    - abc
+  tags: [full, short]
 
-disassembly_suggestion:
-  option_name: disassembly_suggestion
+disassembly:
+  option_name: disassembly
   opencc_config: disassembly.json
   tips: all
   show_in_comment: true
+  overwrite_comment: true
   comment_format:
     - xform/^/〔/
     - xform/$/〕/
+  tags: [full, short]
 
-pinyin_reverse_lookup:
+reverse_lookup:
   dictionary: c42a
-  enable_user_dict: false
-  overwrite_comment: true
-  comment_format:
-    - "xform/$/〕/"
-    - "xform/^/〔/"
-  tags:
-    - pinyin_lookup
-
-bihua_reverse_lookup:
-  dictionary: c42a
-  enable_user_dict: false
   overwrite_comment: true
   comment_format:
     - "xform/$/〕/"
     - "xform/^/〔/"
     - "xform/~//"
-  tags:
-    - bihua_lookup
+  tags: [extra]

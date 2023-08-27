@@ -43,19 +43,27 @@ def write(brevity: D, specialty: D, disassembly: D, full: D):
             c42Dict.write('　\t%s\n' % code)
 
     with open('build/c42a.dict.yaml', 'a') as c42aDict:
+        selections = 0
         key = 'abcdefghijklmnopqrstuvwxyz;'
-        all3 = [x + y + z for x in key for y in key for z in key]
-        c3 = set()
+        allL3Codes = [x + y + z for x in key for y in key for z in key]
+        existingL3Codes = set()
         for char, code in full.items():
-            c3.add(code)
-            if char in brevity or char in specialty:
+            if char in brevity:
                 c42aDict.write('%s\t~%s\n' % (char, code))
+            elif char in specialty:
+                specialtyCode = specialty[char]
+                c42aDict.write('%s\t~%s\n' % (char, code))
+                c42aDict.write('%s\t%s\n' % (char, specialtyCode))
+                existingL3Codes.add(specialtyCode)
             else:
                 c42aDict.write('%s\t%s\n' % (char, code))
-        for code in [x for x in all3 if x not in c3]:
-            c42aDict.write('　\t~%s\n' % code)
-        for char, code in specialty.items():
-            c42aDict.write('%s\t%s\n' % (char, code))
+                # may need selection
+                if code in existingL3Codes:
+                    selections += 1
+                existingL3Codes.add(code)
+        for code in [x for x in allL3Codes if x not in existingL3Codes]:
+            c42aDict.write('　\t%s\n' % code)
+        print('selections:', selections)
 
     with open('build/opencc/char.txt', 'w') as filterBrevityChar:
         for char, code in brevity.items():
@@ -77,7 +85,7 @@ def write(brevity: D, specialty: D, disassembly: D, full: D):
         for char, code in disassembly.items():
             filterDisassembly.write('%s\t%s\n' % (char, code))
 
-    with open('build/opencc/phrase.txt', 'w') as filterPhrase:
+    with open('build/phrase.txt', 'w') as filterPhrase:
         association = {k: [] for k in full}
         association['的'] = []
         with open('assets/wordFrequencies.dat') as f:
@@ -92,7 +100,7 @@ def write(brevity: D, specialty: D, disassembly: D, full: D):
 
     for name in ('c42.schema', 'c42a.schema', 'symbols_for_c'):
         copyfile(f'config/{name}.yaml', f'build/{name}.yaml')
-    for name in ('char', 'word', 'disassembly'):
+    for name in ('char', 'word', 'disassembly', 'legacyphrase'):
         copyfile(f'config/{name}.json', f'build/opencc/{name}.json')
 
 if __name__ == '__main__':
