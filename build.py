@@ -1,6 +1,5 @@
-from shutil import rmtree, copyfile
+from shutil import rmtree, copytree
 from typing import Tuple, Dict
-from os import makedirs
 
 D = Dict[str, str]
 
@@ -32,15 +31,14 @@ def read() -> Tuple[D, D, D, D]:
 
 def write(brevity: D, specialty: D, disassembly: D, full: D):
     rmtree('build', ignore_errors=True)
-    makedirs('build')
-    makedirs('build/opencc')
-    copyfile('config/c42.dict.meta.yaml', 'build/c42.dict.yaml')
-    copyfile('config/c42a.dict.meta.yaml', 'build/c42a.dict.yaml')
+    copytree('config', 'build')
+    copytree('opencc', 'build/opencc')
+    copytree('lua', 'build/lua')
 
     with open('build/c42.dict.yaml', 'a') as c42Dict:
         for char, code in brevity.items():
-            c42Dict.write('%s\t%s\n' % (char, code))
-            c42Dict.write('　\t%s\n' % code)
+            c42Dict.write(f'{char}\t{code}\n')
+            c42Dict.write(f'　\t{code}\n')
 
     with open('build/c42a.dict.yaml', 'a') as c42aDict:
         selections = 0
@@ -49,20 +47,20 @@ def write(brevity: D, specialty: D, disassembly: D, full: D):
         existingL3Codes = set()
         for char, code in full.items():
             if char in brevity:
-                c42aDict.write('%s\t~%s\n' % (char, code))
+                c42aDict.write(f'{char}\t~{code}\n')
             elif char in specialty:
                 specialtyCode = specialty[char]
-                c42aDict.write('%s\t~%s\n' % (char, code))
-                c42aDict.write('%s\t%s\n' % (char, specialtyCode))
+                c42aDict.write(f'{char}\t~{code}\n')
+                c42aDict.write(f'{char}\t{specialtyCode}\n')
                 existingL3Codes.add(specialtyCode)
             else:
-                c42aDict.write('%s\t%s\n' % (char, code))
+                c42aDict.write(f'{char}\t{code}\n')
                 # may need selection
                 if code in existingL3Codes:
                     selections += 1
                 existingL3Codes.add(code)
         for code in [x for x in allL3Codes if x not in existingL3Codes]:
-            c42aDict.write('　\t%s\n' % code)
+            c42aDict.write(f'　\t{code}\n')
         print('selections:', selections)
 
     with open('build/opencc/char.txt', 'w') as filterBrevityChar:
@@ -70,20 +68,20 @@ def write(brevity: D, specialty: D, disassembly: D, full: D):
             if len(char) > 1 or char == '　': continue
             if code != full[char][:2]:
                 if code[-1] in ',./':
-                    filterBrevityChar.write('%s\t~%s\n' % (char, code))
+                    filterBrevityChar.write(f'{char}\t~{code}\n')
                 else:
-                    filterBrevityChar.write('%s\t~~%s\n' % (char, code))
+                    filterBrevityChar.write(f'{char}\t~~{code}\n')
             else:
-                filterBrevityChar.write('%s\t%s\n' % (char, code))
+                filterBrevityChar.write(f'{char}\t{code}\n')
 
     with open('build/opencc/word.txt', 'w') as filterBrevityWord:
         for char, code in brevity.items():
             if len(char) == 1: continue
-            filterBrevityWord.write('%s\t%s\n' % (char, code))
+            filterBrevityWord.write(f'{char}\t{code}\n')
 
     with open('build/opencc/disassembly.txt', 'w') as filterDisassembly:
         for char, code in disassembly.items():
-            filterDisassembly.write('%s\t%s\n' % (char, code))
+            filterDisassembly.write(f'{char}\t{code}\n')
 
     with open('build/phrase.txt', 'w') as filterPhrase:
         association = {k: [] for k in full}
@@ -96,12 +94,7 @@ def write(brevity: D, specialty: D, disassembly: D, full: D):
                     association[char].append(word)
         for char, phraseList in association.items():
             if phraseList:
-                filterPhrase.write('%s %s\n' % (char, ' '.join([p[1:] for p in phraseList])))
-
-    for name in ('c42.schema', 'c42a.schema', 'symbols_for_c'):
-        copyfile(f'config/{name}.yaml', f'build/{name}.yaml')
-    for name in ('char', 'word', 'disassembly', 'legacyphrase'):
-        copyfile(f'config/{name}.json', f'build/opencc/{name}.json')
+                filterPhrase.write(f'{char}: {0}; {" ".join([p[1:] for p in phraseList])}\n')
 
 if __name__ == '__main__':
     write(*read())

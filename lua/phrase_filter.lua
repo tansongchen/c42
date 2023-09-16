@@ -1,22 +1,21 @@
+local utils = require("utils");
+
 local M = {}
 function M.init(env)
   local dir = rime_api.get_user_data_dir()
-  env.db = COLL
-  if not env.db:fetch(".init") then
-    local base = load_base(dir .. "/phrase.txt")
-    for char, assocs in pairs(base) do
-      env.db:update(char, dump_data({ 0, assocs }))
-    end
-    env.db:update(".init", "1")
-  end
   local config = env.engine.schema.config
   env.option_name = config:get_string(env.name_space .. "/option_name")
-  -- log.error(env.option_name)
   env.tags = config:get_list(env.name_space .. "/tags")
-  -- log.error(tostring(env.tags.size))
-  for i = 1, env.tags.size do
-    local tag = env.tags:get_value_at(i - 1):get_string()
-    -- log.error(tag)
+  env.db = assert(utils.opendb(dir .. "/coll", 'coll'), "LevelDb error")
+  if not env.db:fetch(".init") then
+    env.db:update(".init", "1")
+    local file = io.open(dir .. "/phrase.txt")
+    if not file then return end
+    for line in file:lines() do
+      local key = string.sub(line, 1, utf8.offset(line, 2) - 1)
+      local value = string.sub(line, utf8.offset(line, 2) + 1, #line)
+      env.db:update(key, value)
+    end
   end
 end
 
@@ -39,7 +38,7 @@ function M.func(inp, env)
     yield(cand)
     if (utf8.len(cand.text) == 1 and enabled and match_tag) then
       local char = cand.text
-      local assocs = safe_get_assocs(env.db, char)
+      local assocs = utils.safe_get_assocs(env.db, char)
       for _, v in ipairs(assocs) do
         local phrase = Candidate("udata", cand._start, cand._end, char .. v, "")
         phrase.quality = cand.quality

@@ -1,7 +1,9 @@
+local utils = require("utils");
+
 local M = {}
 function M.init(env)
   local dir = rime_api.get_user_data_dir()
-  env.db = assert(opendb(dir .. "/coll", 'dict'), "leveldb cand not init")
+  env.db = assert(utils.opendb(dir .. "/coll", 'coll'), "LevelDb error")
 end
 
 function M.fini(env)
@@ -19,7 +21,7 @@ local function export_legacy_phrase(db)
   local da = db:query("")
   for char, value in da:iter() do
     if utf8.len(char) == 1 then
-      local assocs = parse_data(value)[2]
+      local assocs = utils.parse_data(value)[2]
       local line = char .. "\t" .. char
       for _, v in ipairs(assocs) do
         line = line .. " " .. char .. v
@@ -36,26 +38,27 @@ local function export_phrase(db)
   if not file then return end
   local da = db:query("")
   for char, value in da:iter() do
-    log.error(char .. " " .. value)
     if utf8.len(char) == 1 then
-      local t = parse_data(value)
-      local timestamp = t[1]
-      local assocs = t[2]
-      local line = char .. " " .. timestamp
-      for _, v in ipairs(assocs) do
-        line = line .. " " .. v
-      end
-      file:write(line .. "\n")
+      file:write(char .. ": " .. value .. "\n")
     end
   end
   file:close()
+end
+
+local function in_table(table, value)
+  for k, v in ipairs(table) do
+    if v == value then
+      return k
+    end
+  end
+  return nil
 end
 
 local function add_colloc(db, text, index)
   if utf8.len(text) == 1 then return end
   local key = string.sub(text, 1, utf8.offset(text, 2) - 1)
   local new_colloc = string.sub(text, utf8.offset(text, 2), #text)
-  local assocs = safe_get_assocs(db, key)
+  local assocs = utils.safe_get_assocs(db, key)
   local previous_index = in_table(assocs, new_colloc)
   if previous_index then
     table.remove(assocs, previous_index)
@@ -66,19 +69,19 @@ local function add_colloc(db, text, index)
     table.remove(assocs)
   end
   log.error("add_colloc: " .. text .. ", " .. tostring(index))
-  db:update(key, dump_data({ os.time(), assocs }))
+  db:update(key, utils.dump_data({ os.time(), assocs }))
 end
 
 local function delete_colloc(db, text)
   if utf8.len(text) == 1 then return end
   local key = string.sub(text, 1, utf8.offset(text, 2) - 1)
   local new_colloc = string.sub(text, utf8.offset(text, 2), #text)
-  local assocs = safe_get_assocs(db, key)
+  local assocs = utils.safe_get_assocs(db, key)
   local previous_index = in_table(assocs, new_colloc)
   if previous_index then
     log.error("delete_colloc: " .. text)
     table.remove(assocs, previous_index)
-    db:update(key, dump_data({ os.time(), assocs }))
+    db:update(key, utils.dump_data({ os.time(), assocs }))
   end
 end
 
