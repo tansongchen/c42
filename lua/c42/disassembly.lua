@@ -36,7 +36,7 @@ function this.func(translation, env)
   for candidate in translation:iter() do
     local radical = this.radicals[candidate.text]
     if radical then
-      candidate.comment = candidate.comment .. string.format("[%s]", this.radicals[candidate.text])
+      candidate.comment = candidate.comment .. string.format("［%s］", this.radicals[candidate.text])
     end
     rime.yield(candidate)
   end

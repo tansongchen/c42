@@ -1,31 +1,14 @@
-# 用户指南
-
-## c42 简介
+# c42 简介
 
 C 输入（下简称 C）是百度贴吧用户 @dsscicin 于 2015 年发布的字词混打的形音码输入方案。C 对 GB 字库中的 6729 字进行了编码（去除部分部首），在此范围内具有三码重码极低的特点（即 C 原为四码方案，但只取前三码时仅有 873 个选重），故适于改编为四二顶单字输入方案。
 
 在改编过程中，出于易学性等考虑，简化了一部分拆分规则，并去除了一定量的低频字根，同时保持重码数量基本不变。
 
-## 配置方法
+# 配置方法
 
-1. 在[发布页面](https://github.com/lanluoxiao/c42/releases)下载 `c42.zip`；
-2. 将解压出来的 `rime` 文件夹中所有文件复制到 Rime 用户目录下。这个目录的具体地址是：
-   - Windows：`C:/Users/(用户名)/Appdata/Roaming/Rime/`；
-   - macOS：`/Users/(用户名)/Library/Rime/`；
-   - Linux：`~/.config/ibus/rime/`（ibus 框架）或 `~/.config/fcitx/rime/`（fcitx 框架）；
-3. 在 `default.custom.yaml` 或 `default.yaml` 中添加方案 `c42`；
-4. 在 `rime.lua` 中添加以下代码：
-   ```
-   phrase_edit = require("phrase_edit_processor")
-   phrase = require("phrase_filter")
-   history = require("history_translator")
-   ```
-5. 重新部署。
-
-在 `c42.zip` 中还有 `learn` 文件夹，其中包含：
-
-1. `keymap.png` 是字根图；
-2. `roots/` 文件夹，该文件夹中的字根图片用于 Windows 平台[极速字根练习软件](https://pan.baidu.com/s/1qYtH4Ck)，若要进行字根练习，请首先下载该软件，然后将 `root/` 文件夹放入极速字根练习软件的 `/字根/` 目录中，然后运行软件选取该目录即可。
+1. 下载 main 分支上的所有文件并复制到 Rime 用户目录下；您也可以用 `plum` 脚本安装，即运行命令 `bash rime-install tansongchen/c42`；
+2. 在 `default.custom.yaml` 中添加方案 `c42`；
+3. 重新部署。
 
 # 输入规则
 
@@ -33,7 +16,7 @@ C 输入（下简称 C）是百度贴吧用户 @dsscicin 于 2015 年发布的�
 
 四二顶是一种特殊的顶功模式。在四二顶方案中，取交集为空的两键集 A、B，A 与 B 的并集为 U，则单字有且仅有两种编码，分别为 UA 和 UAUB。（详细论述见拙作《顶功集萃》。）
 
-本方案中，取 A = 【a-z;】共27键，B =【空格】共1键，实际编码空间为 AA （27 × 27）和 AAAB （27 × 27 × 27 × 1），另外加入一简三重 AC （C =【,./】）。
+本方案中，取 A = 【a-z;】共 27 键，B =【空格】共 1 键，实际编码空间为 AA （27 × 27）和 AAAB （27 × 27 × 27 × 1），另外加入一简三重 AC （C =【,./】）。
 
 ## 拆分、选根与编码
 
@@ -93,63 +76,65 @@ C 输入（下简称 C）是百度贴吧用户 @dsscicin 于 2015 年发布的�
 
 特码不属于正常编码，可根据个人习惯选用。特码用于三码重码且两个字都很常用时的避重。例：仪，全码为 iux，与“信”重码，故取其首根 i 和拼音 yi 组成特码。
 
-## 反查与滤镜
+## 词语
+
+由于 c42 是以单字为主的输入方案，所以并没有常规的词组编码。但是，如果打开输入方案中的 `prediction` 选项时，则会在单字后面提示相应的联想词语。
+
+### 导入联想词库
+
+在本仓库的文件中有一个 `c42.import.txt`，里面存放了从国家语委现代汉语语料库词频中生成的六千余条常用词。您可以用 `rime_dict_manager` 来导入 c42 的用户词典：
+
+```bash
+rime_dict_manager -i c42 c42.import.txt
+```
+
+### 数字的左右互击
+
+导入该文件后，在联想开启的情况下，可以看到类似下面的联想内容：
+
+![](https://images.tansongchen.com/1707510743.png)
+
+若单字的末码在右手，则建议用 2, 3, 4, 5, 6 来选择第一至五个联想词；反之，则建议用 0, 9, 8, 7, 6 来选择第一至五个联想词。这样的打法可以明显降低数字的击键难度。候选上的注释也会随着左手和右手的不同而改变：
+
+![](https://images.tansongchen.com/1707510901.png)
+
+### 手动造词
+
+您还可以根据自己的需要来添加更多的联想词。方法为：在已有编码的情况下，按一下单引号键进入造词状态，然后继续输入该词中的所有单字，按下回车结束。然后，该词就会出现在联想词中。
+
+例如，想造「顶功」一词，在已经输入［顶 jid］的情况下，按一下单引号，系统提示已进入造词状态：
+
+![](https://images.tansongchen.com/1707511157.png)
+
+然后继续输入［功 ;;］，两字均完成之后留在缓冲栏中，并未上屏：
+
+![](https://images.tansongchen.com/1707511327.png)
+
+然后回车确认，再打［顶 jid］时，就可以看到
+
+![](https://images.tansongchen.com/1707511393.png)
+
+联想词是动态调频的，意味着自造的词以及常用的词总会出现在前面，方便使用。
+
+---
+
+若想在没有编码的情况下直接进入造词模式，则不能按单引号，而是要按 Control+Shift+6。
+
+## 反查
 
 ### 拼音反查
 
-以「\`」为引导，输入汉字的全拼，查本方案编码。当然，查到的是全码而不是简码，这是为了让初学者更好地思考一下拆分规则，例：
+以「\`」为引导，输入汉字的全拼，查本方案编码。例：
 
-![](https://ws3.sinaimg.cn/large/006tNbRwly1fxyj7zj2cmj30c60ogjvu.jpg)
+![](https://images.tansongchen.com/1707509753.png)
 
 ### 笔画反查
 
-有时，我们可能要输入 GBK 汉字，但 C 只编到 GB，咋办？
+以「\`」为引导，输入汉字的笔画，查本方案编码。例：
 
-以「\`」为引导，输入汉字的笔画，能输入该字，同时查拼音编码。例：
+![](https://images.tansongchen.com/1707509835.png)
 
-![](https://ws1.sinaimg.cn/large/006tNbRwly1fxzn5e8dvmj30g20ogtdh.jpg)
-
-### 拆分滤镜
-
-滤镜默认关闭，可以按 Ctrl + ` 然后选择一个开启。
-
-一根字：
-
-![](https://ws2.sinaimg.cn/large/006tNbRwly1fxzn7urshdj30ds07ggms.jpg)
-
-二根字：
-
-![](https://ws1.sinaimg.cn/large/006tNbRwly1fxzn881ebwj30ds07gmyc.jpg)
-
-三根及以上字：
-
-![](https://ws1.sinaimg.cn/large/006tNbRwly1fxzn8px41zj30ds07gdh2.jpg)
-
-### 二简及无理提示
-
-所有字都有全码，重码时，有简码的字后置。
-
-开启后，如果二简、一简三重或无理没记住，打成全码的时候会提示这个字的编码和类别。
-
-![](https://ws1.sinaimg.cn/large/006tNbRwly1fxykdm6fb8j30dk07g3zn.jpg)
-
-![](https://ws4.sinaimg.cn/large/006tNbRwly1fxyke00hgaj30de07gq45.jpg)
-
-![](https://ws2.sinaimg.cn/large/006tNbRwly1fxykeh8hv8j30dq07ggmr.jpg)
-
-### 联想词
-
-开启后，打一个字会出来以这个字为首的很多词。当然，初学最好不要开，先好好打单字……
-
-如果联想词里恰好含有简词，结合 brevity2 滤镜，也可以提示。
-
-![](https://ws4.sinaimg.cn/large/006tNbRwly1fxykfhpiaaj30f40is0vs.jpg)
-
-### Emoji
-
-开启后，打一个字会出来有这个字含义的很多 Emoji。但是，如果这个 Emoji 必须用 2 个以上字描述，就得用到反查拼音来间接打出。例：
-
-![](https://ws4.sinaimg.cn/large/006tNbRwly1fxykhwgfstj30ci0oggqg.jpg)
+笔画反查也可以作为一种输入本方案主码表中没有的生僻字的办法。
 
 ## 评价
 
