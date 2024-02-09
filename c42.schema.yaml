@@ -13,13 +13,18 @@ schema:
 
 switches:
   - name: ascii_mode
-    states: [中, 西]
+    states: [ 中文, 西文 ]
   - name: full_shape
-    states: [半, 全]
-  - name: traditional_char
-    states: [简, 繁]
+    states: [ 半角, 全角 ]
+  - name: simplification
+    states: [ 汉字, 漢字 ]
+  - name: ascii_punct
+    states: [ 。，, ．， ]
+  - name: prediction
+    reset: 1
+    states: [ 关闭, 联想 ]
   - name: encode
-    states: [无, 造]
+    states: [ 完成, 造词 ]
 
 menu:
   page_size: 6
@@ -50,7 +55,7 @@ engine:
     - script_translator@pinyin_simp
     - history_translator
   filters:
-    - simplifier@traditional_char
+    - simplifier
     - reverse_lookup_filter@reverse_lookup
     - lua_filter@*c42.predictor
     - uniquifier
@@ -74,9 +79,9 @@ punctuator:
 
 recognizer:
   patterns:
-    history: "^;$"
-    extra: "^``[a-z]*$"
-    punct: "^`([0-9]0?|[A-Za-z]*)$"
+    history: '^;$'
+    extra: '^`[a-z]*$'
+    punct: '^\\([0-9]0?|[A-Za-z]*)$'
 
 key_binder:
   import_preset: default
@@ -91,14 +96,15 @@ key_binder:
     - { when: has_menu, accept: 9, send: 3 }
     - { when: has_menu, accept: 8, send: 4 }
     - { when: has_menu, accept: 7, send: 5 }
-    - { when: always, accept: "Control+Shift+4", toggle: traditional_char }
+    - { when: always, accept: "Control+Shift+5", toggle: prediction }
+    - { when: always, accept: "Control+Shift+6", toggle: encode }
     - { when: composing, accept: apostrophe, toggle: encode }
 
 # segmentors
 
 extra:
   tag: extra
-  prefix: "``"
+  prefix: "`"
   tips: "〔反查〕"
 
 # translators
@@ -136,8 +142,8 @@ stroke:
 
 # filters
 
-traditional_char:
-  option_name: traditional_char
+simplifier:
+  option_name: simplification
   opencc_config: s2t.json
   tags: [abc]
 
