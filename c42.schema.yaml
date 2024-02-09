@@ -1,0 +1,149 @@
+schema:
+  schema_id: c42
+  name: "C 输入 · 四二顶"
+  version: "2.4"
+  author:
+    - Cicin（15.02.05版）
+    - 蓝落萧改编
+  description: |
+    改编自 Cicin 所作的 C 输入，取前 3 码为全码，4 码顶 2 码上屏
+  dependencies:
+    - pinyin_simp
+    - stroke
+
+switches:
+  - name: ascii_mode
+    states: [中, 西]
+  - name: full_shape
+    states: [半, 全]
+  - name: traditional_char
+    states: [简, 繁]
+  - name: encode
+    states: [无, 造]
+
+menu:
+  page_size: 6
+
+engine:
+  processors:
+    - ascii_composer
+    - recognizer
+    - key_binder
+    - lua_processor@*c42.popping
+    - lua_processor@*c42.encoder
+    - speller
+    - punctuator
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - affix_segmentor@extra
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - punct_translator
+    - table_translator
+    - script_translator@stroke
+    - script_translator@pinyin_simp
+    - history_translator
+  filters:
+    - simplifier@traditional_char
+    - reverse_lookup_filter@reverse_lookup
+    - lua_filter@*c42.predictor
+    - uniquifier
+    - lua_filter@*c42.select_comment
+    - lua_filter@*c42.disassembly
+
+# processors
+
+speller:
+  alphabet: "qwertasdfgzxcvbyuiophjkl;nm,./"
+  initials: "qwertasdfgzxcvbyuiophjkl;nm"
+  popping:
+    - match: "[a-z;][a-z;,./][a-z;]"
+      accept: "[a-z;,./]"
+      prefix: 2
+    - match: "[a-z;][a-z;,./]"
+      accept: "[,./]"
+
+punctuator:
+  import_preset: c42.symbols
+
+recognizer:
+  patterns:
+    history: "^;$"
+    extra: "^``[a-z]*$"
+    punct: "^`([0-9]0?|[A-Za-z]*)$"
+
+key_binder:
+  import_preset: default
+  bindings:
+    - { when: has_menu, accept: period, send: period }
+    - { when: has_menu, accept: comma, send: comma }
+    - { when: has_menu, accept: minus, send: minus }
+    - { when: has_menu, accept: equal, send: equal }
+    - { when: has_menu, accept: Tab, send: Page_Down }
+    - { when: paging, accept: "Shift+Tab", send: Page_Up }
+    - { when: has_menu, accept: 0, send: 2 }
+    - { when: has_menu, accept: 9, send: 3 }
+    - { when: has_menu, accept: 8, send: 4 }
+    - { when: has_menu, accept: 7, send: 5 }
+    - { when: always, accept: "Control+Shift+4", toggle: traditional_char }
+    - { when: composing, accept: apostrophe, toggle: encode }
+
+# segmentors
+
+extra:
+  tag: extra
+  prefix: "``"
+  tips: "〔反查〕"
+
+# translators
+
+translator:
+  dictionary: c42
+  enable_encoder: false
+  encode_commit_history: false
+  enable_user_dict: false
+  enable_completion: false
+
+predictor:
+  dictionary: ""
+  user_dict: c42
+  enable_encoder: false
+  encode_commit_history: false
+  enable_completion: false
+
+history:
+  tag: history
+  input: ";"
+  size: 5
+
+pinyin_simp:
+  tag: extra
+  dictionary: pinyin_simp
+  enable_user_dict: false
+  initial_quality: 1
+
+stroke:
+  tag: extra
+  dictionary: stroke
+  enable_user_dict: false
+  initial_quality: 100
+
+# filters
+
+traditional_char:
+  option_name: traditional_char
+  opencc_config: s2t.json
+  tags: [abc]
+
+reverse_lookup:
+  dictionary: c42
+  overwrite_comment: true
+  comment_format:
+    - "xform/~//"
+  tags: [extra]
