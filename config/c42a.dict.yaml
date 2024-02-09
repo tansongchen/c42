@@ -1,8 +1,0 @@
----
-name: c42a
-version: "1"
-sort: original
-columns:
-  - text
-  - code
-...

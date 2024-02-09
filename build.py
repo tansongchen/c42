@@ -32,58 +32,34 @@ def read() -> Tuple[D, D, D, D]:
 def write(brevity: D, specialty: D, disassembly: D, full: D):
     rmtree('build', ignore_errors=True)
     copytree('config', 'build')
-    copytree('opencc', 'build/opencc')
     copytree('lua', 'build/lua')
 
     with open('build/c42.dict.yaml', 'a') as c42Dict:
         for char, code in brevity.items():
             c42Dict.write(f'{char}\t{code}\n')
-            c42Dict.write(f'　\t{code}\n')
-
-    with open('build/c42a.dict.yaml', 'a') as c42aDict:
         selections = 0
-        key = 'abcdefghijklmnopqrstuvwxyz;'
-        allL3Codes = [x + y + z for x in key for y in key for z in key]
         existingL3Codes = set()
         for char, code in full.items():
             if char in brevity:
-                c42aDict.write(f'{char}\t~{code}\n')
+                c42Dict.write(f'{char}\t~{code}\n')
             elif char in specialty:
                 specialtyCode = specialty[char]
-                c42aDict.write(f'{char}\t~{code}\n')
-                c42aDict.write(f'{char}\t{specialtyCode}\n')
+                c42Dict.write(f'{char}\t~{code}\n')
+                c42Dict.write(f'{char}\t{specialtyCode}\n')
                 existingL3Codes.add(specialtyCode)
             else:
-                c42aDict.write(f'{char}\t{code}\n')
+                c42Dict.write(f'{char}\t{code}\n')
                 # may need selection
                 if code in existingL3Codes:
                     selections += 1
                 existingL3Codes.add(code)
-        for code in [x for x in allL3Codes if x not in existingL3Codes]:
-            c42aDict.write(f'　\t{code}\n')
         print('selections:', selections)
 
-    with open('build/opencc/char.txt', 'w') as filterBrevityChar:
-        for char, code in brevity.items():
-            if len(char) > 1 or char == '　': continue
-            if code != full[char][:2]:
-                if code[-1] in ',./':
-                    filterBrevityChar.write(f'{char}\t~{code}\n')
-                else:
-                    filterBrevityChar.write(f'{char}\t~~{code}\n')
-            else:
-                filterBrevityChar.write(f'{char}\t{code}\n')
-
-    with open('build/opencc/word.txt', 'w') as filterBrevityWord:
-        for char, code in brevity.items():
-            if len(char) == 1: continue
-            filterBrevityWord.write(f'{char}\t{code}\n')
-
-    with open('build/opencc/disassembly.txt', 'w') as filterDisassembly:
+    with open('build/lua/c42/disassembly.txt', 'w') as filterDisassembly:
         for char, code in disassembly.items():
             filterDisassembly.write(f'{char}\t{code}\n')
 
-    with open('build/phrase.txt', 'w') as filterPhrase:
+    with open('build/c42.import.txt', 'w') as filterPhrase:
         association = {k: [] for k in full}
         association['的'] = []
         with open('assets/wordFrequencies.dat') as f:
@@ -93,8 +69,8 @@ def write(brevity: D, specialty: D, disassembly: D, full: D):
                 if len(association.get(char, [])) < 5:
                     association[char].append(word)
         for char, phraseList in association.items():
-            if phraseList:
-                filterPhrase.write(f'{char}: {0}; {" ".join([p[1:] for p in phraseList])}\n')
+            for index, phrase in enumerate(phraseList):
+                filterPhrase.write(f'{phrase}\t{char}\t{len(phraseList) - index}\n')
 
 if __name__ == '__main__':
     write(*read())
