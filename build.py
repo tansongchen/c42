@@ -26,7 +26,7 @@ def read() -> Tuple[D, D, D, D]:
             if isPartial == '1': continue
             PY = ''.join([toFull(char) for char in py.upper()])
             disassembly[char] = (componentName[s1] + componentName[s2] + componentName[s3] + PY)[:3]
-            full[char] = (componentKey[s1] + componentKey[s2] + componentKey[s3] + py)[:3]
+            full[char] = (componentKey[s1] + componentKey[s2] + componentKey[s3] + py.upper())[:3]
     return brevity, specialty, disassembly, full
 
 def write(brevity: D, specialty: D, disassembly: D, full: D):

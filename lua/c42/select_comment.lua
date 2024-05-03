@@ -1,4 +1,4 @@
-local rime = require "lib"
+local rime = require "c42.lib"
 
 local this = {}
 
@@ -31,14 +31,18 @@ function this.func(translation, env)
     select_keys = "23456"
   end
   for candidate in translation:iter() do
-    local key = string.sub(select_keys, i, i)
+    local key = select_keys:sub(i, i)
     if i == 0 then
       goto continue
     end
     if key == "" then
       goto continue
     end
-    candidate.comment = key
+    if candidate.comment == "" then
+      candidate.comment = key
+    else
+      candidate.comment = candidate.comment .. " " .. key
+    end
     ::continue::
     i = i + 1
     rime.yield(candidate)

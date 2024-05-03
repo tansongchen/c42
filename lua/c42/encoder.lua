@@ -1,4 +1,4 @@
-local lib = require "lib"
+local lib = require "c42.lib"
 local this = {}
 
 local XK_Return = 0xff0d
