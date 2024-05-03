@@ -1,4 +1,4 @@
-local rime = require "lib"
+local rime = require "c42.lib"
 
 local this = {}
 
