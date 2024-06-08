@@ -9,8 +9,11 @@ def read() -> Tuple[D, D, D, D]:
     with open('assets/keymap.dat') as keymapFile:
         for line in keymapFile:
             component, key, name = line.strip('\n').split('\t')
-            componentKey[component] = key
-            componentName[component] = name if name else component
+            displayName = name if name else component
+            for i, k in enumerate(key):
+                part = f'{component}.{i}' if i else component
+                componentKey[part] = k
+                componentName[part] = displayName
 
     with open('assets/brevity.dat') as brevityFile:
         brevity = dict([line.strip('\n').split('\t') for line in brevityFile])
